@@ -25,9 +25,19 @@ testResult.index.name = "Testing MAE"
 
 # regression
 
-colors = ['orange', 'teal', 'yellowgreen', 'gold']
-fig, axes = plt.subplots(2, 2, figsize=(10, 10), sharey=True)
+colors = ['red', 'orange', 'teal', 'yellowgreen', 'blue']
+fig, axes = plt.subplots(1, 2, figsize=(10, 6), sharey=True)
 i = 0
+c = 0
+
+# plot training points
+plt.subplot(1,2,1)
+plt.scatter(X, y, color='navy', s=30, marker='o', label="dataset")
+plt.title('linear', fontsize=26)
+
+plt.subplot(1,2,2)
+plt.scatter(X, y, color='navy', s=30, marker='o', label="dataset")
+plt.title('poly', fontsize=26)
 
 # Iterate each fold
 for train_index, test_index in kf.split(X):
@@ -35,8 +45,8 @@ for train_index, test_index in kf.split(X):
     X_train, X_test = X[train_index], X[test_index]
     y_train, y_test = y[train_index], y[test_index]
 
-    xLimit = X_train.min()-2.0, X_train.max()+2.0
-    yLimit = y_train.min()-2.0, y_train.max()+2.0
+    xLimit = X_train.min()-2.5, X_train.max()+2.5
+    yLimit = y_train.min()-2.5, y_train.max()+2.5
 
     # use linspace for plot regression line
     x_plot = np.linspace(xLimit[0], xLimit[1], 100)
@@ -46,11 +56,6 @@ for train_index, test_index in kf.split(X):
     X_test = X_test[:, np.newaxis]
     X_plot = x_plot[:, np.newaxis]
 
-    # plot training points
-    plt.subplot(2, 2, i+1)
-    plt.scatter(X_train, y_train, color='navy', s=30, marker='o', label="training points")
-    plt.title('fold '+str(i+1), fontsize=26)
-    i += 1
 
     # set limit of axis
     plt.xlim(xLimit)
@@ -58,15 +63,19 @@ for train_index, test_index in kf.split(X):
 
     # Train & Predict
     for count, degree in enumerate([1, 5]):
+
         model = make_pipeline(PolynomialFeatures(degree), LinearRegression())
         model.fit(X_train, y_train)
         y_plot = model.predict(X_plot)  # predict regression line
-        plt.plot(x_plot, y_plot, color=colors[count], label="degree %d" % degree)
+        plt.subplot(1,2,count+1)
+        plt.plot(x_plot, y_plot, color=colors[c], label="fold %d" % (i+1) )
         plt.legend(loc='lower left')
         # Record MAE
         trainResult.iloc[i-1, count] = mean_absolute_error(y_train, model.predict(X_train))
         testResult.iloc[i-1, count] = mean_absolute_error(y_test, model.predict(X_test))
 
+    c = (c + 1) % 5
+    i += 1
 #plt.savefig('ML3-1.png')
 plt.show()
 
@@ -75,3 +84,4 @@ print('-'*50)
 print(trainResult.to_string())
 print('-'*50)
 print(testResult.to_string())
+#display(trainResult, testResult)
